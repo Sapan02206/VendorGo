@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple JavaScript Test</title>
+</head>
+<body>
+    <h1>JavaScript Test</h1>
+    <button onclick="alert('JavaScript is working!')">Test JavaScript</button>
+    
+    <div id="test-result" style="margin: 20px; padding: 20px; border: 1px solid #ccc;">
+        Waiting for test...
+    </div>
+    
+    <script>
+        // Test basic JavaScript
+        document.getElementById('test-result').innerHTML = 'JavaScript is loading...';
+        
+        // Test after 1 second
+        setTimeout(function() {
+            document.getElementById('test-result').innerHTML = '✅ JavaScript is working properly!';
+        }, 1000);
+    </script>
+</body>
+</html>

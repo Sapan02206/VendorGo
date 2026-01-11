@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendorGo - Click Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .log {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 VendorGo Click Functionality Debug</h1>
+    
+    <div class="test-section">
+        <h2>1. Server Connection Test</h2>
+        <button class="btn" onclick="testServerConnection()">Test Server Connection</button>
+        <div id="serverStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API Endpoints Test</h2>
+        <button class="btn" onclick="testVendorsAPI()">Test GET /api/vendors</button>
+        <button class="btn" onclick="testVendorByIdAPI()">Test GET /api/vendors/:id</button>
+        <div id="apiStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Customer PWA Click Test</h2>
+        <button class="btn" onclick="testCustomerViewStore()">Test Customer "View Store" Click</button>
+        <div id="customerStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Vendor Dashboard Click Test</h2>
+        <button class="btn" onclick="testVendorEdit()">Test Vendor "Edit" Click</button>
+        <div id="vendorStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. JavaScript Console Log</h2>
+        <button class="btn btn-success" onclick="clearLog()">Clear Log</button>
+        <button class="btn btn-danger" onclick="exportLog()">Export Log</button>
+        <div id="consoleLog" class="log"></div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        const logContainer = document.getElementById('consoleLog');
+        const logs = [];
+        
+        function addToLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logs.push(logEntry);
+            
+            const logElement = document.createElement('div');
+            logElement.textContent = logEntry;
+            logElement.style.color = type === 'error' ? '#e74c3c' : type === 'warn' ? '#f39c12' : '#ecf0f1';
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToLog('warn', args.join(' '));
+        };
+
+        // Test functions
+        async function testServerConnection() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.innerHTML = '<div class="status">Testing server connection...</div>';
+            
+            try {
+                const response = await fetch('/');
+                if (response.ok) {
+                    statusDiv.innerHTML = '<div class="status success">✅ Server is running and accessible</div>';
+                    console.log('Server connection test: SUCCESS');
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Server responded with error: ' + response.status + '</div>';
+                    console.error('Server connection test: FAILED - Status', response.status);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Cannot connect to server: ' + error.message + '</div>';
+                console.error('Server connection test: FAILED -', error.message);
+            }
+        }
+
+        async function testVendorsAPI() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.innerHTML = '<div class="status">Testing vendors API...</div>';
+            
+            try {
+                const response = await fetch('/api/vendors');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const vendorCount = Array.isArray(data) ? data.length : (data.vendors ? data.vendors.length : 0);
+                    statusDiv.innerHTML = `<div class="status success">✅ Vendors API working - Found ${vendorCount} vendors</div>`;
+                    console.log('Vendors API test: SUCCESS - Data:', data);
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Vendors API error: ' + (data.error || 'Unknown error') + '</div>';
+                    console.error('Vendors API test: FAILED -', data);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Vendors API request failed: ' + error.message + '</div>';
+                console.error('Vendors API test: FAILED -', error.message);
+            }
+        }
+
+        async function testVendorByIdAPI() {
+            const statusDiv = document.getElementById('apiStatus');
+            
+            // First get vendors to get a valid ID
+            try {
+                const vendorsResponse = await fetch('/api/vendors');
+                const vendorsData = await vendorsResponse.json();
+                const vendors = Array.isArray(vendorsData) ? vendorsData : (vendorsData.vendors || []);
+                
+                if (vendors.length === 0) {
+                    statusDiv.innerHTML += '<div class="status error">❌ No vendors found to test individual vendor API</div>';
+                    return;
+                }
+                
+                const testVendorId = vendors[0]._id;
+                console.log('Testing vendor by ID with:', testVendorId);
+                
+                const response = await fetch(`/api/vendors/${testVendorId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML += `<div class="status success">✅ Individual vendor API working - Loaded: ${data.name}</div>`;
+                    console.log('Vendor by ID test: SUCCESS - Data:', data);
+                } else {
+                    statusDiv.innerHTML += '<div class="status error">❌ Individual vendor API error: ' + (data.error || 'Unknown error') + '</div>';
+                    console.error('Vendor by ID test: FAILED -', data);
+                }
+            } catch (error) {
+                statusDiv.innerHTML += '<div class="status error">❌ Individual vendor API request failed: ' + error.message + '</div>';
+                console.error('Vendor by ID test: FAILED -', error.message);
+            }
+        }
+
+        async function testCustomerViewStore() {
+            const statusDiv = document.getElementById('customerStatus');
+            statusDiv.innerHTML = '<div class="status">Testing customer view store functionality...</div>';
+            
+            try {
+                // Test if customer app is loaded
+                if (typeof window.app === 'undefined') {
+                    statusDiv.innerHTML = '<div class="status error">❌ Customer app not loaded (window.app undefined)</div>';
+                    console.error('Customer test: App not loaded');
+                    return;
+                }
+                
+                // Test if viewVendorStorefront function exists
+                if (typeof window.app.viewVendorStorefront !== 'function') {
+                    statusDiv.innerHTML = '<div class="status error">❌ viewVendorStorefront function not found in app</div>';
+                    console.error('Customer test: viewVendorStorefront function missing');
+                    return;
+                }
+                
+                // Test with a demo vendor ID
+                console.log('Testing viewVendorStorefront with demo ID...');
+                window.app.viewVendorStorefront('demo1');
+                
+                statusDiv.innerHTML = '<div class="status success">✅ Customer view store function called successfully</div>';
+                console.log('Customer test: SUCCESS - Function called');
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Customer view store test failed: ' + error.message + '</div>';
+                console.error('Customer test: FAILED -', error.message);
+            }
+        }
+
+        async function testVendorEdit() {
+            const statusDiv = document.getElementById('vendorStatus');
+            statusDiv.innerHTML = '<div class="status">Testing vendor edit functionality...</div>';
+            
+            try {
+                // Test if app is loaded
+                if (typeof window.app === 'undefined') {
+                    statusDiv.innerHTML = '<div class="status error">❌ Vendor app not loaded (window.app undefined)</div>';
+                    console.error('Vendor test: App not loaded');
+                    return;
+                }
+                
+                // Test if editProduct function exists
+                if (typeof window.app.editProduct !== 'function') {
+                    statusDiv.innerHTML = '<div class="status error">❌ editProduct function not found in app</div>';
+                    console.error('Vendor test: editProduct function missing');
+                    return;
+                }
+                
+                // Test authentication
+                if (!window.app.api || !window.app.api.isAuthenticated()) {
+                    statusDiv.innerHTML = '<div class="status error">❌ Vendor not authenticated</div>';
+                    console.error('Vendor test: Not authenticated');
+                    return;
+                }
+                
+                if (!window.app.api.isVendor()) {
+                    statusDiv.innerHTML = '<div class="status error">❌ User is not a vendor</div>';
+                    console.error('Vendor test: Not a vendor');
+                    return;
+                }
+                
+                // Test with a demo product ID
+                console.log('Testing editProduct with demo ID...');
+                window.app.editProduct('demo-product-1');
+                
+                statusDiv.innerHTML = '<div class="status success">✅ Vendor edit function called successfully</div>';
+                console.log('Vendor test: SUCCESS - Function called');
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Vendor edit test failed: ' + error.message + '</div>';
+                console.error('Vendor test: FAILED -', error.message);
+            }
+        }
+
+        function clearLog() {
+            logs.length = 0;
+            logContainer.innerHTML = '';
+        }
+
+        function exportLog() {
+            const logText = logs.join('\n');
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'vendorgo-debug-log.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Auto-run basic tests on load
+        window.addEventListener('load', () => {
+            console.log('🔧 VendorGo Debug Page Loaded');
+            console.log('Available global objects:', Object.keys(window).filter(key => key.includes('app') || key.includes('vendor')));
+            
+            setTimeout(() => {
+                testServerConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+</content>
+</invoke>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Click Test - VendorGo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .vendor-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .vendor-card:hover {
+            background: #e9e9e9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .view-store-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .view-store-btn:hover {
+            background: #219a52;
+        }
+        .edit-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .edit-btn:hover {
+            background: #e67e22;
+        }
+        .log {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-close {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Final Click Test - VendorGo</h1>
+    <p>This test will simulate exactly what you're trying to do and identify the problem.</p>
+    
+    <div class="test-section">
+        <h2>Step 1: Load Vendors</h2>
+        <button class="btn" onclick="loadVendors()">Load Vendors from API</button>
+        <div id="vendorLoadResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: Customer PWA Test</h2>
+        <p>This simulates the customer.html page functionality:</p>
+        <div id="customerVendors"></div>
+        <div id="customerResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Vendor Dashboard Test</h2>
+        <p>This simulates the vendor dashboard functionality:</p>
+        <button class="btn" onclick="simulateVendorLogin()">Simulate Vendor Login</button>
+        <div id="vendorProducts"></div>
+        <div id="vendorResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 4: Direct Links Test</h2>
+        <a href="/customer.html" target="_blank" class="btn">Open Customer PWA</a>
+        <a href="/index.html" target="_blank" class="btn">Open Main App</a>
+        <a href="/diagnostic.html" target="_blank" class="btn">Open Diagnostic</a>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Log</h2>
+        <button class="btn btn-danger" onclick="clearLog()">Clear Log</button>
+        <div id="consoleLog" class="log"></div>
+    </div>
+
+    <!-- Test Modal -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Test Modal</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalContent">
+                <p>This modal opened successfully!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let testVendors = [];
+        let isVendorLoggedIn = false;
+        
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const logContainer = document.getElementById('consoleLog');
+        
+        function addToLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            
+            const logElement = document.createElement('div');
+            logElement.textContent = logEntry;
+            logElement.style.color = type === 'error' ? '#e74c3c' : type === 'warn' ? '#f39c12' : '#ecf0f1';
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToLog('warn', args.join(' '));
+        };
+
+        // Step 1: Load vendors
+        async function loadVendors() {
+            const resultDiv = document.getElementById('vendorLoadResult');
+            resultDiv.innerHTML = '<div class="result">Loading vendors...</div>';
+            
+            try {
+                console.log('🔄 Loading vendors from API...');
+                const response = await fetch('/api/vendors');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testVendors = Array.isArray(data) ? data : (data.vendors || []);
+                    console.log('✅ Vendors loaded successfully:', testVendors.length);
+                    resultDiv.innerHTML = `<div class="result">✅ Loaded ${testVendors.length} vendors successfully!</div>`;
+                    
+                    // Automatically load customer test
+                    loadCustomerTest();
+                } else {
+                    throw new Error(data.error || 'API error');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load vendors:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Failed to load vendors: ${error.message}</div>`;
+            }
+        }
+
+        // Step 2: Customer PWA test
+        function loadCustomerTest() {
+            const customerDiv = document.getElementById('customerVendors');
+            
+            if (testVendors.length === 0) {
+                customerDiv.innerHTML = '<div class="result error">❌ No vendors to display</div>';
+                return;
+            }
+            
+            console.log('🏪 Loading customer vendor cards...');
+            
+            customerDiv.innerHTML = `
+                <h3>Customer View (${testVendors.length} vendors)</h3>
+                ${testVendors.slice(0, 3).map(vendor => `
+                    <div class="vendor-card" onclick="testCustomerViewStore('${vendor._id}')">
+                        <h4>${vendor.name}</h4>
+                        <p><strong>Category:</strong> ${vendor.category}</p>
+                        <p><strong>Products:</strong> ${vendor.products ? vendor.products.length : 0}</p>
+                        <p><strong>Status:</strong> ${vendor.isOnline ? '🟢 Online' : '🔴 Offline'}</p>
+                        <button class="view-store-btn" onclick="event.stopPropagation(); testCustomerViewStore('${vendor._id}')">
+                            View Store
+                        </button>
+                    </div>
+                `).join('')}
+            `;
+            
+            console.log('✅ Customer vendor cards loaded');
+        }
+
+        // Test customer view store
+        async function testCustomerViewStore(vendorId) {
+            console.log('🏪 Testing customer view store for vendor:', vendorId);
+            const resultDiv = document.getElementById('customerResult');
+            
+            try {
+                // Find vendor
+                const vendor = testVendors.find(v => v._id === vendorId);
+                if (!vendor) {
+                    throw new Error('Vendor not found in local data');
+                }
+                
+                console.log('✅ Vendor found locally:', vendor.name);
+                
+                // Test API call to get vendor details
+                const response = await fetch(`/api/vendors/${vendorId}`);
+                const vendorDetails = await response.json();
+                
+                if (response.ok) {
+                    console.log('✅ Vendor details loaded from API:', vendorDetails.name);
+                    
+                    // Show modal
+                    document.getElementById('modalTitle').textContent = `${vendorDetails.name} - Store`;
+                    document.getElementById('modalContent').innerHTML = `
+                        <h4>${vendorDetails.name}</h4>
+                        <p><strong>Category:</strong> ${vendorDetails.category}</p>
+                        <p><strong>Location:</strong> ${vendorDetails.location?.address?.street || 'Not specified'}</p>
+                        <p><strong>Products:</strong> ${vendorDetails.products ? vendorDetails.products.length : 0}</p>
+                        ${vendorDetails.products && vendorDetails.products.length > 0 ? `
+                            <h5>Products:</h5>
+                            ${vendorDetails.products.slice(0, 3).map(product => `
+                                <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 4px;">
+                                    <strong>${product.name}</strong> - ₹${product.price}
+                                    <br><small>${product.description || 'No description'}</small>
+                                    <br><button onclick="testOrderProduct('${vendorId}', '${product._id}', '${product.name}', ${product.price})" style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-top: 5px;">Order Now</button>
+                                </div>
+                            `).join('')}
+                        ` : '<p>No products available</p>'}
+                    `;
+                    
+                    document.getElementById('testModal').classList.add('active');
+                    
+                    resultDiv.innerHTML = `<div class="result">✅ Customer "View Store" working! Modal opened for ${vendorDetails.name}</div>`;
+                    console.log('✅ Customer view store test PASSED');
+                } else {
+                    throw new Error(vendorDetails.error || 'Failed to load vendor details');
+                }
+            } catch (error) {
+                console.error('❌ Customer view store test FAILED:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Customer view store FAILED: ${error.message}</div>`;
+            }
+        }
+
+        // Test order product
+        function testOrderProduct(vendorId, productId, productName, price) {
+            console.log('🛒 Testing order product:', productName, 'for ₹' + price);
+            alert(`Order test: ${productName} for ₹${price}\n\nThis would normally start the order process.`);
+            console.log('✅ Order product test completed');
+        }
+
+        // Step 3: Vendor dashboard test
+        function simulateVendorLogin() {
+            console.log('👤 Simulating vendor login...');
+            isVendorLoggedIn = true;
+            
+            // Create mock vendor with products
+            const mockVendor = {
+                _id: 'test-vendor-123',
+                name: 'Test Vendor',
+                products: [
+                    { _id: 'prod1', name: 'Test Product 1', price: 100, description: 'Test description 1', available: true },
+                    { _id: 'prod2', name: 'Test Product 2', price: 200, description: 'Test description 2', available: false },
+                    { _id: 'prod3', name: 'Test Product 3', price: 150, description: 'Test description 3', available: true }
+                ]
+            };
+            
+            const vendorDiv = document.getElementById('vendorProducts');
+            vendorDiv.innerHTML = `
+                <h3>Vendor Dashboard - Products</h3>
+                ${mockVendor.products.map(product => `
+                    <div class="vendor-card">
+                        <h4>${product.name}</h4>
+                        <p><strong>Price:</strong> ₹${product.price}</p>
+                        <p><strong>Description:</strong> ${product.description}</p>
+                        <p><strong>Status:</strong> ${product.available ? '✅ Available' : '❌ Unavailable'}</p>
+                        <button class="edit-btn" onclick="testVendorEdit('${product._id}', '${product.name}', ${product.price}, '${product.description}')">
+                            Edit Product
+                        </button>
+                        <button class="btn" onclick="testToggleAvailability('${product._id}', ${product.available})">
+                            ${product.available ? 'Disable' : 'Enable'}
+                        </button>
+                    </div>
+                `).join('')}
+            `;
+            
+            console.log('✅ Vendor dashboard loaded with test products');
+        }
+
+        // Test vendor edit
+        function testVendorEdit(productId, productName, price, description) {
+            console.log('✏️ Testing vendor edit for product:', productId, productName);
+            const resultDiv = document.getElementById('vendorResult');
+            
+            try {
+                // Show edit modal
+                document.getElementById('modalTitle').textContent = 'Edit Product';
+                document.getElementById('modalContent').innerHTML = `
+                    <form onsubmit="event.preventDefault(); testSaveProduct('${productId}');">
+                        <div style="margin-bottom: 15px;">
+                            <label>Product Name:</label>
+                            <input type="text" id="editProductName" value="${productName}" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label>Price (₹):</label>
+                            <input type="number" id="editProductPrice" value="${price}" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label>Description:</label>
+                            <textarea id="editProductDescription" style="width: 100%; padding: 8px; margin-top: 5px; height: 80px;">${description}</textarea>
+                        </div>
+                        <button type="submit" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 4px;">
+                            Save Changes
+                        </button>
+                    </form>
+                `;
+                
+                document.getElementById('testModal').classList.add('active');
+                
+                resultDiv.innerHTML = `<div class="result">✅ Vendor "Edit" working! Edit modal opened for ${productName}</div>`;
+                console.log('✅ Vendor edit test PASSED');
+            } catch (error) {
+                console.error('❌ Vendor edit test FAILED:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Vendor edit FAILED: ${error.message}</div>`;
+            }
+        }
+
+        // Test save product
+        function testSaveProduct(productId) {
+            const name = document.getElementById('editProductName').value;
+            const price = document.getElementById('editProductPrice').value;
+            const description = document.getElementById('editProductDescription').value;
+            
+            console.log('💾 Testing save product:', productId, name, price);
+            alert(`Save test: Product "${name}" updated!\nPrice: ₹${price}\nDescription: ${description}`);
+            
+            closeModal();
+            console.log('✅ Save product test completed');
+        }
+
+        // Test toggle availability
+        function testToggleAvailability(productId, currentStatus) {
+            console.log('🔄 Testing toggle availability for product:', productId, 'current status:', currentStatus);
+            const newStatus = !currentStatus;
+            alert(`Toggle test: Product ${productId} is now ${newStatus ? 'Available' : 'Unavailable'}`);
+            console.log('✅ Toggle availability test completed');
+        }
+
+        // Modal functions
+        function closeModal() {
+            document.getElementById('testModal').classList.remove('active');
+            console.log('✅ Modal closed');
+        }
+
+        // Clear log
+        function clearLog() {
+            logContainer.innerHTML = '';
+            console.log('🧹 Log cleared');
+        }
+
+        // Auto-run tests
+        window.addEventListener('load', () => {
+            console.log('🚀 Final Click Test page loaded');
+            console.log('📋 Available tests:');
+            console.log('  1. Load Vendors - Tests API connection');
+            console.log('  2. Customer PWA - Tests "View Store" buttons');
+            console.log('  3. Vendor Dashboard - Tests "Edit" buttons');
+            console.log('  4. Direct Links - Opens actual pages');
+            
+            // Auto-load vendors after 1 second
+            setTimeout(() => {
+                loadVendors();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+</content>
+</invoke>

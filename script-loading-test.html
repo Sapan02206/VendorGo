@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Loading Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .vendor-card {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .view-store-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Script Loading Test</h1>
+    
+    <h2>Step 1: Load API Script</h2>
+    <button class="btn" onclick="loadAPIScript()">Load /js/api.js</button>
+    <div id="result1"></div>
+    
+    <h2>Step 2: Test API</h2>
+    <button class="btn" onclick="testAPI()">Test vendorGoAPI</button>
+    <div id="result2"></div>
+    
+    <h2>Step 3: Load App Script</h2>
+    <button class="btn" onclick="loadAppScript()">Load /app.js</button>
+    <div id="result3"></div>
+    
+    <h2>Step 4: Test App Creation</h2>
+    <button class="btn" onclick="testAppCreation()">Test App Creation</button>
+    <div id="result4"></div>
+    
+    <h2>Step 5: Test View Store Function</h2>
+    <button class="btn" onclick="testViewStore()">Test viewVendorStorefront</button>
+    <div id="result5"></div>
+    
+    <h2>Step 6: Create Working View Store Button</h2>
+    <div class="vendor-card">
+        <h3>Test Vendor</h3>
+        <p>This should work after all scripts are loaded:</p>
+        <button class="view-store-btn" onclick="testWorkingViewStore('test-vendor-123')">
+            View Store (Should Work)
+        </button>
+    </div>
+    <div id="result6"></div>
+
+    <script>
+        // Step 1: Load API script
+        async function loadAPIScript() {
+            const resultDiv = document.getElementById('result1');
+            resultDiv.innerHTML = '<div class="result">Loading API script...</div>';
+            
+            try {
+                await loadScript('/js/api.js');
+                
+                if (window.vendorGoAPI) {
+                    resultDiv.innerHTML = '<div class="result">✅ API script loaded! vendorGoAPI is available</div>';
+                    console.log('✅ vendorGoAPI loaded:', typeof window.vendorGoAPI);
+                } else {
+                    resultDiv.innerHTML = '<div class="result error">❌ API script loaded but vendorGoAPI not available</div>';
+                    console.error('❌ vendorGoAPI not available after loading script');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ Failed to load API script: ' + error.message + '</div>';
+                console.error('❌ API script loading failed:', error);
+            }
+        }
+        
+        // Step 2: Test API
+        function testAPI() {
+            const resultDiv = document.getElementById('result2');
+            
+            try {
+                if (window.vendorGoAPI) {
+                    console.log('✅ Testing vendorGoAPI methods...');
+                    console.log('vendorGoAPI.isAuthenticated:', typeof window.vendorGoAPI.isAuthenticated);
+                    console.log('vendorGoAPI.getVendors:', typeof window.vendorGoAPI.getVendors);
+                    resultDiv.innerHTML = '<div class="result">✅ vendorGoAPI is working!</div>';
+                } else {
+                    throw new Error('vendorGoAPI not available');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ API test failed: ' + error.message + '</div>';
+                console.error('❌ API test failed:', error);
+            }
+        }
+        
+        // Step 3: Load app script
+        async function loadAppScript() {
+            const resultDiv = document.getElementById('result3');
+            resultDiv.innerHTML = '<div class="result">Loading app script...</div>';
+            
+            try {
+                await loadScript('/app.js');
+                resultDiv.innerHTML = '<div class="result">✅ App script loaded successfully!</div>';
+                console.log('✅ App script loaded');
+                
+                // Wait a bit for initialization
+                setTimeout(() => {
+                    if (window.app) {
+                        resultDiv.innerHTML += '<div class="result">✅ window.app is available!</div>';
+                        console.log('✅ window.app created:', typeof window.app);
+                    } else {
+                        resultDiv.innerHTML += '<div class="result error">❌ window.app is not available</div>';
+                        console.error('❌ window.app not created');
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ Failed to load app script: ' + error.message + '</div>';
+                console.error('❌ App script loading failed:', error);
+            }
+        }
+        
+        // Step 4: Test app creation manually
+        function testAppCreation() {
+            const resultDiv = document.getElementById('result4');
+            
+            try {
+                console.log('🧪 Testing manual app creation...');
+                
+                if (typeof VendorGoApp === 'undefined') {
+                    throw new Error('VendorGoApp class not available');
+                }
+                
+                console.log('✅ VendorGoApp class is available');
+                
+                // Try to create app manually
+                if (!window.app) {
+                    console.log('Creating app manually...');
+                    window.app = new VendorGoApp();
+                    console.log('✅ App created manually:', window.app);
+                }
+                
+                if (window.app && typeof window.app.viewVendorStorefront === 'function') {
+                    resultDiv.innerHTML = '<div class="result">✅ App created successfully! viewVendorStorefront method available</div>';
+                    console.log('✅ App creation test passed');
+                } else {
+                    throw new Error('App created but viewVendorStorefront method not available');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ App creation failed: ' + error.message + '</div>';
+                console.error('❌ App creation failed:', error);
+            }
+        }
+        
+        // Step 5: Test view store function
+        function testViewStore() {
+            const resultDiv = document.getElementById('result5');
+            
+            try {
+                console.log('🧪 Testing viewVendorStorefront function...');
+                
+                if (typeof window.viewVendorStorefront === 'function') {
+                    console.log('✅ Global viewVendorStorefront function is available');
+                    window.viewVendorStorefront('test-vendor-123');
+                    resultDiv.innerHTML = '<div class="result">✅ viewVendorStorefront function called!</div>';
+                } else {
+                    throw new Error('viewVendorStorefront function not available');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ View store test failed: ' + error.message + '</div>';
+                console.error('❌ View store test failed:', error);
+            }
+        }
+        
+        // Step 6: Working view store function
+        function testWorkingViewStore(vendorId) {
+            const resultDiv = document.getElementById('result6');
+            
+            try {
+                console.log('🏪 Testing working view store with vendor ID:', vendorId);
+                
+                if (window.app && typeof window.app.viewVendorStorefront === 'function') {
+                    console.log('✅ Using app.viewVendorStorefront method');
+                    window.app.viewVendorStorefront(vendorId);
+                    resultDiv.innerHTML = '<div class="result">✅ Working view store called via app method!</div>';
+                } else if (typeof window.viewVendorStorefront === 'function') {
+                    console.log('✅ Using global viewVendorStorefront function');
+                    window.viewVendorStorefront(vendorId);
+                    resultDiv.innerHTML = '<div class="result">✅ Working view store called via global function!</div>';
+                } else {
+                    throw new Error('No viewVendorStorefront method available');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ Working view store failed: ' + error.message + '</div>';
+                console.error('❌ Working view store failed:', error);
+            }
+        }
+        
+        // Helper function to load scripts
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                // Remove existing script if it exists
+                const existingScript = document.querySelector(`script[src="${src}"]`);
+                if (existingScript) {
+                    existingScript.remove();
+                }
+                
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    console.log('Script loaded successfully:', src);
+                    resolve();
+                };
+                script.onerror = (error) => {
+                    console.error('Script failed to load:', src, error);
+                    reject(new Error(`Failed to load ${src}`));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', function() {
+            console.log('🚀 Script loading test page loaded');
+        });
+        
+        console.log('🚀 Script loading test script loaded');
+    </script>
+</body>
+</html>
+</content>
+</invoke>

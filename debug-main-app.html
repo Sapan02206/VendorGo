@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Main App - View Store Issue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .vendor-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .log {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Main App - View Store Issue</h1>
+    
+    <div class="test-section">
+        <h2>1. Check Global Objects</h2>
+        <button class="btn" onclick="checkGlobals()">Check Global Objects</button>
+        <div id="globalsResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test View Store Function</h2>
+        <button class="btn" onclick="testViewStoreFunction()">Test viewVendorStorefront Function</button>
+        <div id="functionResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Load Scripts and Test</h2>
+        <button class="btn" onclick="loadScriptsAndTest()">Load Scripts and Test</button>
+        <div id="scriptsResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Simulate Vendor Card Click</h2>
+        <div id="testVendorCard"></div>
+        <button class="btn" onclick="createTestVendorCard()">Create Test Vendor Card</button>
+        <div id="cardResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Log</h2>
+        <div id="consoleLog" class="log"></div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logContainer = document.getElementById('consoleLog');
+        
+        function addToLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            
+            const logElement = document.createElement('div');
+            logElement.textContent = logEntry;
+            logElement.style.color = type === 'error' ? '#e74c3c' : '#ecf0f1';
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+
+        // Check global objects
+        function checkGlobals() {
+            const resultDiv = document.getElementById('globalsResult');
+            let result = '<div class="result">';
+            
+            console.log('🔍 Checking global objects...');
+            
+            // Check if window.app exists
+            if (typeof window.app !== 'undefined') {
+                result += '✅ window.app exists<br>';
+                console.log('✅ window.app exists:', typeof window.app);
+                
+                // Check if viewVendorStorefront method exists
+                if (typeof window.app.viewVendorStorefront === 'function') {
+                    result += '✅ window.app.viewVendorStorefront is a function<br>';
+                    console.log('✅ window.app.viewVendorStorefront is a function');
+                } else {
+                    result += '❌ window.app.viewVendorStorefront is not a function<br>';
+                    console.error('❌ window.app.viewVendorStorefront is not a function');
+                }
+            } else {
+                result += '❌ window.app does not exist<br>';
+                console.error('❌ window.app does not exist');
+            }
+            
+            // Check if global viewVendorStorefront exists
+            if (typeof window.viewVendorStorefront === 'function') {
+                result += '✅ window.viewVendorStorefront (global) is a function<br>';
+                console.log('✅ window.viewVendorStorefront (global) is a function');
+            } else {
+                result += '❌ window.viewVendorStorefront (global) is not a function<br>';
+                console.error('❌ window.viewVendorStorefront (global) is not a function');
+            }
+            
+            // Check if API exists
+            if (typeof window.vendorGoAPI !== 'undefined') {
+                result += '✅ window.vendorGoAPI exists<br>';
+                console.log('✅ window.vendorGoAPI exists');
+            } else {
+                result += '❌ window.vendorGoAPI does not exist<br>';
+                console.error('❌ window.vendorGoAPI does not exist');
+            }
+            
+            result += '</div>';
+            resultDiv.innerHTML = result;
+        }
+
+        // Test view store function
+        function testViewStoreFunction() {
+            const resultDiv = document.getElementById('functionResult');
+            console.log('🧪 Testing viewVendorStorefront function...');
+            
+            try {
+                if (typeof window.viewVendorStorefront === 'function') {
+                    console.log('✅ Calling window.viewVendorStorefront with test ID...');
+                    window.viewVendorStorefront('test-vendor-123');
+                    resultDiv.innerHTML = '<div class="result">✅ Function called successfully! Check console for details.</div>';
+                } else if (typeof window.app !== 'undefined' && typeof window.app.viewVendorStorefront === 'function') {
+                    console.log('✅ Calling window.app.viewVendorStorefront with test ID...');
+                    window.app.viewVendorStorefront('test-vendor-123');
+                    resultDiv.innerHTML = '<div class="result">✅ App method called successfully! Check console for details.</div>';
+                } else {
+                    throw new Error('No viewVendorStorefront function found');
+                }
+            } catch (error) {
+                console.error('❌ Function test failed:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Function test failed: ${error.message}</div>`;
+            }
+        }
+
+        // Load scripts and test
+        async function loadScriptsAndTest() {
+            const resultDiv = document.getElementById('scriptsResult');
+            resultDiv.innerHTML = '<div class="result">Loading scripts...</div>';
+            
+            try {
+                console.log('📦 Loading API script...');
+                await loadScript('/js/api.js');
+                console.log('✅ API script loaded');
+                
+                console.log('📦 Loading app script...');
+                await loadScript('/app.js');
+                console.log('✅ App script loaded');
+                
+                // Wait a bit for initialization
+                setTimeout(() => {
+                    checkGlobals();
+                    resultDiv.innerHTML = '<div class="result">✅ Scripts loaded! Check globals above.</div>';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Script loading failed:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Script loading failed: ${error.message}</div>`;
+            }
+        }
+
+        // Helper function to load scripts
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Create test vendor card
+        async function createTestVendorCard() {
+            const cardDiv = document.getElementById('testVendorCard');
+            const resultDiv = document.getElementById('cardResult');
+            
+            try {
+                console.log('🏪 Creating test vendor card...');
+                
+                // Get a real vendor from API
+                const response = await fetch('/api/vendors');
+                const data = await response.json();
+                const vendors = Array.isArray(data) ? data : (data.vendors || []);
+                
+                if (vendors.length === 0) {
+                    throw new Error('No vendors found');
+                }
+                
+                const vendor = vendors[0];
+                console.log('✅ Using vendor:', vendor.name, 'ID:', vendor._id);
+                
+                cardDiv.innerHTML = `
+                    <div class="vendor-card">
+                        <h3>${vendor.name}</h3>
+                        <p>Category: ${vendor.category}</p>
+                        <p>Products: ${vendor.products ? vendor.products.length : 0}</p>
+                        
+                        <h4>Test Different Click Methods:</h4>
+                        
+                        <button onclick="testMethod1('${vendor._id}')" style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 5px;">
+                            Method 1: app.viewVendorStorefront()
+                        </button>
+                        
+                        <button onclick="testMethod2('${vendor._id}')" style="background: #f39c12; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 5px;">
+                            Method 2: window.viewVendorStorefront()
+                        </button>
+                        
+                        <button onclick="testMethod3('${vendor._id}')" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 5px;">
+                            Method 3: Direct function call
+                        </button>
+                    </div>
+                `;
+                
+                resultDiv.innerHTML = '<div class="result">✅ Test vendor card created! Try clicking the buttons above.</div>';
+                
+            } catch (error) {
+                console.error('❌ Failed to create test card:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Failed to create test card: ${error.message}</div>`;
+            }
+        }
+
+        // Test methods
+        function testMethod1(vendorId) {
+            console.log('🧪 Testing Method 1: app.viewVendorStorefront()');
+            try {
+                if (window.app && typeof window.app.viewVendorStorefront === 'function') {
+                    window.app.viewVendorStorefront(vendorId);
+                    console.log('✅ Method 1 called successfully');
+                } else {
+                    throw new Error('window.app.viewVendorStorefront not available');
+                }
+            } catch (error) {
+                console.error('❌ Method 1 failed:', error);
+                alert('Method 1 failed: ' + error.message);
+            }
+        }
+
+        function testMethod2(vendorId) {
+            console.log('🧪 Testing Method 2: window.viewVendorStorefront()');
+            try {
+                if (typeof window.viewVendorStorefront === 'function') {
+                    window.viewVendorStorefront(vendorId);
+                    console.log('✅ Method 2 called successfully');
+                } else {
+                    throw new Error('window.viewVendorStorefront not available');
+                }
+            } catch (error) {
+                console.error('❌ Method 2 failed:', error);
+                alert('Method 2 failed: ' + error.message);
+            }
+        }
+
+        function testMethod3(vendorId) {
+            console.log('🧪 Testing Method 3: Direct function call');
+            try {
+                // Try to call the function directly
+                if (window.app && typeof window.app.viewVendorStorefront === 'function') {
+                    console.log('📞 Calling app.viewVendorStorefront directly...');
+                    window.app.viewVendorStorefront(vendorId);
+                    console.log('✅ Method 3 called successfully');
+                } else {
+                    throw new Error('Direct function call not available');
+                }
+            } catch (error) {
+                console.error('❌ Method 3 failed:', error);
+                alert('Method 3 failed: ' + error.message);
+            }
+        }
+
+        // Auto-run checks
+        window.addEventListener('load', () => {
+            console.log('🔍 Debug page loaded');
+            setTimeout(() => {
+                checkGlobals();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+</content>
+</invoke>

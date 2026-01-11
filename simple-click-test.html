@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Click Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            display: block;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .vendor-card {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .view-store-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .view-store-btn:hover {
+            background: #219a52;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Simple Click Test</h1>
+    
+    <h2>Test 1: Basic Inline JavaScript</h2>
+    <button class="btn" onclick="alert('Basic click works!')">Basic Alert Test</button>
+    
+    <h2>Test 2: Function Call</h2>
+    <button class="btn" onclick="testFunction()">Function Call Test</button>
+    <div id="result1"></div>
+    
+    <h2>Test 3: Simulate View Store Button</h2>
+    <div class="vendor-card">
+        <h3>Test Vendor</h3>
+        <p>This simulates a vendor card with a View Store button</p>
+        <button class="view-store-btn" onclick="simulateViewStore('test-vendor-123')">
+            View Store (Simulated)
+        </button>
+    </div>
+    <div id="result2"></div>
+    
+    <h2>Test 4: Load Real Scripts</h2>
+    <button class="btn" onclick="loadRealScripts()">Load API + App Scripts</button>
+    <div id="result3"></div>
+    
+    <h2>Test 5: Test Real View Store</h2>
+    <button class="btn" onclick="testRealViewStore()">Test Real viewVendorStorefront</button>
+    <div id="result4"></div>
+
+    <script>
+        // Basic function test
+        function testFunction() {
+            console.log('testFunction called');
+            document.getElementById('result1').innerHTML = 
+                '<div class="result">✅ Function call works!</div>';
+        }
+        
+        // Simulate view store
+        function simulateViewStore(vendorId) {
+            console.log('simulateViewStore called with:', vendorId);
+            document.getElementById('result2').innerHTML = 
+                `<div class="result">✅ View Store simulation works! Vendor ID: ${vendorId}</div>`;
+        }
+        
+        // Load real scripts
+        async function loadRealScripts() {
+            const resultDiv = document.getElementById('result3');
+            resultDiv.innerHTML = '<div class="result">Loading scripts...</div>';
+            
+            try {
+                // Load API script
+                console.log('Loading API script...');
+                await loadScript('/js/api.js');
+                console.log('API script loaded');
+                
+                // Load app script
+                console.log('Loading app script...');
+                await loadScript('/app.js');
+                console.log('App script loaded');
+                
+                // Wait for initialization
+                setTimeout(() => {
+                    if (window.app) {
+                        resultDiv.innerHTML = '<div class="result">✅ Scripts loaded! App initialized.</div>';
+                        console.log('App initialized:', window.app);
+                    } else {
+                        resultDiv.innerHTML = '<div class="result error">❌ Scripts loaded but app not initialized</div>';
+                        console.error('App not initialized');
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Script loading failed:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Script loading failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Helper to load scripts
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    console.log('Script loaded:', src);
+                    resolve();
+                };
+                script.onerror = (error) => {
+                    console.error('Script failed to load:', src, error);
+                    reject(new Error(`Failed to load ${src}`));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Test real view store
+        function testRealViewStore() {
+            const resultDiv = document.getElementById('result4');
+            
+            try {
+                if (typeof window.viewVendorStorefront === 'function') {
+                    console.log('Global viewVendorStorefront function found');
+                    window.viewVendorStorefront('test-vendor-123');
+                    resultDiv.innerHTML = '<div class="result">✅ Real viewVendorStorefront called!</div>';
+                } else if (window.app && typeof window.app.viewVendorStorefront === 'function') {
+                    console.log('App viewVendorStorefront method found');
+                    window.app.viewVendorStorefront('test-vendor-123');
+                    resultDiv.innerHTML = '<div class="result">✅ App viewVendorStorefront called!</div>';
+                } else {
+                    throw new Error('viewVendorStorefront function not found');
+                }
+            } catch (error) {
+                console.error('Real view store test failed:', error);
+                resultDiv.innerHTML = `<div class="result error">❌ Real view store failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Log when script loads
+        console.log('🚀 Simple click test script loaded');
+        
+        // Test basic functionality on load
+        window.addEventListener('load', () => {
+            console.log('🚀 Simple click test page loaded');
+            console.log('Available global objects:', Object.keys(window).filter(key => 
+                key.includes('app') || key.includes('vendor') || key.includes('API')
+            ));
+        });
+    </script>
+</body>
+</html>
+</content>
+</invoke>

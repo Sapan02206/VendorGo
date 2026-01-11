@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendorGo Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .vendor-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+            cursor: pointer;
+        }
+        .vendor-card:hover {
+            background: #e9e9e9;
+        }
+        .log {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 VendorGo Diagnostic Tool</h1>
+    
+    <div class="test-section">
+        <h2>1. API Test</h2>
+        <button class="btn" onclick="testAPI()">Test Vendors API</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Vendor Cards Test</h2>
+        <button class="btn" onclick="loadVendorCards()">Load Vendor Cards</button>
+        <div id="vendorCards"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Click Test</h2>
+        <button class="btn" onclick="testClick('test-vendor-123')">Test Click Function</button>
+        <div id="clickResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Console Log</h2>
+        <div id="consoleLog" class="log"></div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logContainer = document.getElementById('consoleLog');
+        
+        function addToLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            
+            const logElement = document.createElement('div');
+            logElement.textContent = logEntry;
+            logElement.style.color = type === 'error' ? '#e74c3c' : '#ecf0f1';
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+
+        // Test API
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<div class="result">Testing API...</div>';
+            
+            try {
+                const response = await fetch('/api/vendors');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const vendors = Array.isArray(data) ? data : (data.vendors || []);
+                    resultDiv.innerHTML = `<div class="result">✅ API working! Found ${vendors.length} vendors</div>`;
+                    console.log('API test successful:', vendors.length, 'vendors found');
+                    
+                    // Store vendors globally for testing
+                    window.testVendors = vendors;
+                } else {
+                    throw new Error(data.error || 'API error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ API failed: ${error.message}</div>`;
+                console.error('API test failed:', error);
+            }
+        }
+
+        // Load vendor cards
+        function loadVendorCards() {
+            const vendorCards = document.getElementById('vendorCards');
+            
+            if (!window.testVendors || window.testVendors.length === 0) {
+                vendorCards.innerHTML = '<div class="result error">❌ No vendors loaded. Run API test first.</div>';
+                return;
+            }
+            
+            console.log('Loading vendor cards for', window.testVendors.length, 'vendors');
+            
+            vendorCards.innerHTML = window.testVendors.map(vendor => `
+                <div class="vendor-card" onclick="testViewStore('${vendor._id}')">
+                    <h3>${vendor.name}</h3>
+                    <p>Category: ${vendor.category}</p>
+                    <p>Products: ${vendor.products ? vendor.products.length : 0}</p>
+                    <p>Status: ${vendor.isOnline ? 'Online' : 'Offline'}</p>
+                    <button onclick="event.stopPropagation(); testViewStore('${vendor._id}')" style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                        View Store
+                    </button>
+                </div>
+            `).join('');
+            
+            console.log('Vendor cards loaded successfully');
+        }
+
+        // Test view store function
+        function testViewStore(vendorId) {
+            console.log('testViewStore called with ID:', vendorId);
+            
+            const clickResult = document.getElementById('clickResult');
+            clickResult.innerHTML = `<div class="result">✅ View Store clicked for vendor: ${vendorId}</div>`;
+            
+            // Try to find the vendor
+            if (window.testVendors) {
+                const vendor = window.testVendors.find(v => v._id === vendorId);
+                if (vendor) {
+                    console.log('Vendor found:', vendor.name);
+                    clickResult.innerHTML += `<div class="result">✅ Vendor found: ${vendor.name}</div>`;
+                    
+                    // Test if we can access vendor details
+                    testVendorDetails(vendorId);
+                } else {
+                    console.error('Vendor not found with ID:', vendorId);
+                    clickResult.innerHTML += `<div class="result error">❌ Vendor not found</div>`;
+                }
+            }
+        }
+
+        // Test vendor details API
+        async function testVendorDetails(vendorId) {
+            try {
+                console.log('Testing vendor details API for:', vendorId);
+                const response = await fetch(`/api/vendors/${vendorId}`);
+                const vendor = await response.json();
+                
+                if (response.ok) {
+                    console.log('Vendor details loaded:', vendor);
+                    document.getElementById('clickResult').innerHTML += 
+                        `<div class="result">✅ Vendor details loaded: ${vendor.name} with ${vendor.products ? vendor.products.length : 0} products</div>`;
+                } else {
+                    throw new Error(vendor.error || 'Failed to load vendor details');
+                }
+            } catch (error) {
+                console.error('Vendor details test failed:', error);
+                document.getElementById('clickResult').innerHTML += 
+                    `<div class="result error">❌ Vendor details failed: ${error.message}</div>`;
+            }
+        }
+
+        // Test basic click
+        function testClick(testId) {
+            console.log('Basic click test with ID:', testId);
+            const clickResult = document.getElementById('clickResult');
+            clickResult.innerHTML = `<div class="result">✅ Basic click working with ID: ${testId}</div>`;
+        }
+
+        // Auto-run tests
+        window.addEventListener('load', () => {
+            console.log('🔍 Diagnostic page loaded');
+            setTimeout(() => {
+                testAPI();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+</content>
+</invoke>

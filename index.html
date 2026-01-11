@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendorGo - Digital Presence for Street Vendors</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-store"></i>
+                <span>VendorGo</span>
+                <small style="font-size: 0.7em; color: #95a5a6; margin-left: 0.5rem;">Digital Presence Platform</small>
+            </div>
+            <div class="nav-actions">
+                <button id="whatsappDemo" class="demo-btn">
+                    <i class="fab fa-whatsapp"></i>
+                    WhatsApp Bot Demo
+                </button>
+                <button id="modeToggle" class="mode-toggle" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); animation: pulse 2s infinite;">
+                    <i class="fas fa-user"></i>
+                    <span id="modeText">👆 Click to Switch to Vendor Mode</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Customer Mode -->
+        <div id="customerMode" class="mode-container active">
+            <!-- Discovery Page -->
+            <div id="discoveryPage" class="page active">
+                <div class="page-header">
+                    <h1>Discover Local Vendors</h1>
+                    <p>Empowering street vendors with digital presence - Find amazing local businesses near you</p>
+                    <div class="ai-discovery-stats" style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; text-align: center;">
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: bold;" id="totalVendors">0</div>
+                                <div style="font-size: 0.8rem; opacity: 0.9;">Digital Vendors</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: bold;" id="totalOrders">0</div>
+                                <div style="font-size: 0.8rem; opacity: 0.9;">Online Orders</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: bold;">95%</div>
+                                <div style="font-size: 0.8rem; opacity: 0.9;">Visibility Increase</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <button id="viewOrderHistoryBtn" class="btn btn-secondary" style="margin-right: 1rem;">
+                        <i class="fas fa-history"></i> My Orders
+                    </button>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="food">Food & Beverages</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                    <select id="distanceFilter">
+                        <option value="">Any Distance</option>
+                        <option value="1">Within 1km</option>
+                        <option value="3">Within 3km</option>
+                        <option value="5">Within 5km</option>
+                    </select>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search vendors, products..." style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; min-width: 200px;">
+                        <button id="searchBtn" style="padding: 0.75rem 1rem; background: #3498db; color: white; border: none; border-radius: 8px; margin-left: 0.5rem; cursor: pointer;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="discovery-content">
+                    <div class="map-container">
+                        <div id="map"></div>
+                    </div>
+                    <div class="vendors-list">
+                        <div id="vendorCards"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendor Storefront -->
+            <div id="storefrontPage" class="page">
+                <div class="storefront-header">
+                    <button id="backToDiscovery" class="back-btn">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <div id="storefrontInfo"></div>
+                </div>
+                <div id="storefrontProducts"></div>
+            </div>
+
+            <!-- Order Flow -->
+            <div id="orderPage" class="page">
+                <div class="order-header">
+                    <button id="backToStorefront" class="back-btn">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h2>Place Your Order</h2>
+                </div>
+                <div id="orderForm"></div>
+            </div>
+
+            <!-- Order Confirmation -->
+            <div id="confirmationPage" class="page">
+                <div class="confirmation-content">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>Order Placed Successfully!</h2>
+                    <div id="orderDetails"></div>
+                    <button id="backToDiscoveryFromConfirm" class="btn btn-primary">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+
+            <!-- Order History Page -->
+            <div id="orderHistoryPage" class="page">
+                <button id="backToDiscoveryFromHistory" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Discovery
+                </button>
+                <div class="page-header">
+                    <h1>Your Orders</h1>
+                    <p>Track your order history and status</p>
+                </div>
+                
+                <div class="order-lookup">
+                    <div class="form-group">
+                        <label for="orderPhoneInput">Enter your phone number to view orders:</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="tel" id="orderPhoneInput" placeholder="Enter phone number" style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
+                            <button id="lookupOrdersBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Find Orders
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="orderHistoryContent">
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p>Enter your phone number to view your order history</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Mode -->
+        <div id="vendorMode" class="mode-container">
+            <!-- Vendor Onboarding -->
+            <div id="onboardingPage" class="page active">
+                <div class="onboarding-container">
+                    <h1>Join VendorGo</h1>
+                    <p>Build your digital presence and reach more customers</p>
+                    <div class="benefits-list" style="margin: 1.5rem 0; text-align: left;">
+                        <div style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: #27ae60; margin-right: 0.5rem;"></i>Create your digital storefront</div>
+                        <div style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: #27ae60; margin-right: 0.5rem;"></i>Reach customers online</div>
+                        <div style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: #27ae60; margin-right: 0.5rem;"></i>Manage orders digitally</div>
+                        <div style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: #27ae60; margin-right: 0.5rem;"></i>Track your business growth</div>
+                    </div>
+                    
+                    <form id="vendorOnboardingForm" class="onboarding-form">
+                        <div class="form-group">
+                            <label for="vendorName">Vendor Name</label>
+                            <input type="text" id="vendorName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vendorPhone">Phone Number</label>
+                            <input type="tel" id="vendorPhone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vendorCategory">Business Category</label>
+                            <select id="vendorCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="food">Food & Beverages</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="accessories">Accessories</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vendorLocation">Location</label>
+                            <input type="text" id="vendorLocation" placeholder="Enter your business location" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i>
+                            Launch My Digital Presence
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Vendor Dashboard -->
+            <div id="dashboardPage" class="page">
+                <div class="dashboard-header">
+                    <h1>Vendor Dashboard</h1>
+                    <button id="logoutVendor" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-user-circle"></i> Profile</h3>
+                        <div id="vendorProfile"></div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-box"></i> Products</h3>
+                            <button id="addProductBtn" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add Product
+                            </button>
+                        </div>
+                        <div id="vendorProducts"></div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-shopping-cart"></i> Orders</h3>
+                        <div id="vendorOrders"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Product</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="addProductForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="productName">Product Name</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Price (₹)</label>
+                    <input type="number" id="productPrice" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Description</label>
+                    <textarea id="productDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="productImage">Product Image</label>
+                    <input type="file" id="productImage" accept="image/*">
+                    <small style="color: #7f8c8d;">Upload a product image (Max 5MB, JPG/PNG/WebP)</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Processing Payment</h3>
+            </div>
+            <div class="payment-processing">
+                <div class="spinner"></div>
+                <p>Please wait while we process your payment...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="whatsapp-bot.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

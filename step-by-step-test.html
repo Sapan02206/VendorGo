@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step by Step Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Step by Step JavaScript Test</h1>
+    
+    <h2>Step 1: Basic Function</h2>
+    <button class="btn" onclick="step1()">Test Step 1</button>
+    <div id="result1"></div>
+    
+    <h2>Step 2: Console Log</h2>
+    <button class="btn" onclick="step2()">Test Step 2</button>
+    <div id="result2"></div>
+    
+    <h2>Step 3: Async Function</h2>
+    <button class="btn" onclick="step3()">Test Step 3</button>
+    <div id="result3"></div>
+    
+    <h2>Step 4: Fetch API</h2>
+    <button class="btn" onclick="step4()">Test Step 4</button>
+    <div id="result4"></div>
+    
+    <h2>Step 5: Dynamic Script Loading</h2>
+    <button class="btn" onclick="step5()">Test Step 5</button>
+    <div id="result5"></div>
+
+    <script>
+        // Step 1: Basic function
+        function step1() {
+            try {
+                document.getElementById('result1').innerHTML = '<div class="result">✅ Step 1: Basic function works!</div>';
+                console.log('Step 1 completed successfully');
+            } catch (error) {
+                document.getElementById('result1').innerHTML = '<div class="result error">❌ Step 1 failed: ' + error.message + '</div>';
+                console.error('Step 1 failed:', error);
+            }
+        }
+        
+        // Step 2: Console log
+        function step2() {
+            try {
+                console.log('Step 2: Console log test');
+                console.error('Step 2: Console error test');
+                document.getElementById('result2').innerHTML = '<div class="result">✅ Step 2: Console log works! Check browser console (F12)</div>';
+            } catch (error) {
+                document.getElementById('result2').innerHTML = '<div class="result error">❌ Step 2 failed: ' + error.message + '</div>';
+                console.error('Step 2 failed:', error);
+            }
+        }
+        
+        // Step 3: Async function
+        async function step3() {
+            try {
+                console.log('Step 3: Testing async function');
+                await new Promise(resolve => setTimeout(resolve, 100));
+                document.getElementById('result3').innerHTML = '<div class="result">✅ Step 3: Async function works!</div>';
+                console.log('Step 3 completed successfully');
+            } catch (error) {
+                document.getElementById('result3').innerHTML = '<div class="result error">❌ Step 3 failed: ' + error.message + '</div>';
+                console.error('Step 3 failed:', error);
+            }
+        }
+        
+        // Step 4: Fetch API
+        async function step4() {
+            try {
+                console.log('Step 4: Testing fetch API');
+                document.getElementById('result4').innerHTML = '<div class="result">Testing fetch API...</div>';
+                
+                const response = await fetch('/api/vendors');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const vendorCount = Array.isArray(data) ? data.length : (data.vendors ? data.vendors.length : 0);
+                    document.getElementById('result4').innerHTML = '<div class="result">✅ Step 4: Fetch API works! Found ' + vendorCount + ' vendors</div>';
+                    console.log('Step 4 completed successfully:', vendorCount, 'vendors');
+                } else {
+                    throw new Error(data.error || 'API error');
+                }
+            } catch (error) {
+                document.getElementById('result4').innerHTML = '<div class="result error">❌ Step 4 failed: ' + error.message + '</div>';
+                console.error('Step 4 failed:', error);
+            }
+        }
+        
+        // Step 5: Dynamic script loading
+        function step5() {
+            try {
+                console.log('Step 5: Testing dynamic script loading');
+                document.getElementById('result5').innerHTML = '<div class="result">Testing script loading...</div>';
+                
+                const script = document.createElement('script');
+                script.textContent = 'console.log("Dynamic script loaded successfully"); window.dynamicScriptLoaded = true;';
+                
+                script.onload = function() {
+                    console.log('Script onload event fired');
+                };
+                
+                script.onerror = function(error) {
+                    console.error('Script onerror event fired:', error);
+                    document.getElementById('result5').innerHTML = '<div class="result error">❌ Step 5 failed: Script error</div>';
+                };
+                
+                document.head.appendChild(script);
+                
+                // Check if script executed
+                setTimeout(() => {
+                    if (window.dynamicScriptLoaded) {
+                        document.getElementById('result5').innerHTML = '<div class="result">✅ Step 5: Dynamic script loading works!</div>';
+                        console.log('Step 5 completed successfully');
+                    } else {
+                        document.getElementById('result5').innerHTML = '<div class="result error">❌ Step 5 failed: Script did not execute</div>';
+                        console.error('Step 5 failed: Script did not execute');
+                    }
+                }, 200);
+                
+            } catch (error) {
+                document.getElementById('result5').innerHTML = '<div class="result error">❌ Step 5 failed: ' + error.message + '</div>';
+                console.error('Step 5 failed:', error);
+            }
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', function() {
+            console.log('🚀 Step by step test page loaded');
+            console.log('Available functions:', ['step1', 'step2', 'step3', 'step4', 'step5']);
+        });
+        
+        // Test if this script is working
+        console.log('🚀 Step by step test script loaded and executing');
+    </script>
+</body>
+</html>
+</content>
+</invoke>

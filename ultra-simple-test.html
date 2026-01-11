@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultra Simple Test</title>
+</head>
+<body>
+    <h1>Ultra Simple JavaScript Test</h1>
+    
+    <p>If JavaScript is working, you should see an alert when you click the button below:</p>
+    
+    <button onclick="alert('JavaScript is working!')">Click Me - Test 1</button>
+    
+    <br><br>
+    
+    <button onclick="document.getElementById('result').innerHTML = 'JavaScript works!'">Click Me - Test 2</button>
+    
+    <br><br>
+    
+    <div id="result" style="padding: 10px; background: yellow; margin: 10px 0;">
+        Result will appear here if JavaScript works
+    </div>
+    
+    <script>
+        // This should show in console if JavaScript is enabled
+        console.log('JavaScript is enabled and running');
+        
+        // This should change the page title
+        document.title = 'JS Working - ' + document.title;
+        
+        // Add a message to the page
+        window.onload = function() {
+            var div = document.createElement('div');
+            div.innerHTML = '<p style="color: green; font-weight: bold;">✅ JavaScript loaded successfully!</p>';
+            document.body.appendChild(div);
+        };
+    </script>
+</body>
+</html>
+</content>
+</invoke>
